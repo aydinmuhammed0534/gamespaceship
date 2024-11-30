@@ -1,0 +1,94 @@
+@model Spaceship
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-area {
+            width: 600px;
+            height: 400px;
+            border: 3px solid #333;
+            background-color: #000033;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .spaceship {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            left: @(Model.PosX)px;
+            top: @(Model.PosY)px;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .status-panel {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Uzay Oyunu</h1>
+
+        <div class="game-area">
+            <div class="spaceship"></div>
+        </div>
+
+        <div class="control-panel">
+            <div class="button-row">
+                <a href="@Url.Action("MovePlayer", "Home", new { direction = "up" })" class="control-button">↑</a>
+            </div>
+            <div class="button-row">
+                <a href="@Url.Action("MovePlayer", "Home", new { direction = "left" })" class="control-button">←</a>
+                <a href="@Url.Action("MovePlayer", "Home", new { direction = "right" })" class="control-button">→</a>
+            </div>
+            <div class="button-row">
+                <a href="@Url.Action("MovePlayer", "Home", new { direction = "down" })" class="control-button">↓</a>
+            </div>
+        </div>
+
+        <div class="status-panel">
+            <h3>Durum Bilgisi</h3>
+            <p>Sağlık: @Model.Health</p>
+            <p>Hasar: @Model.Damage</p>
+            <p>Hız: @Model.Speed</p>
+            <p>Konum: X:@Model.PosX, Y:@Model.PosY</p>
+        </div>
+    </div>
+</body>
+</html> 

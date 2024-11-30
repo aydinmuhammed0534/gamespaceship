@@ -1,0 +1,29 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+}
+
+<h1 class="text-danger">Hata</h1>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <h2 class="text-danger">@Model.Message</h2>
+}
+else
+{
+    <h2 class="text-danger">İşlem sırasında bir hata oluştu.</h2>
+}
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+@if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+{
+    <p>
+        <strong>Development Mode:</strong> Hata detayları için Development ortamına geçin.
+    </p>
+} 
