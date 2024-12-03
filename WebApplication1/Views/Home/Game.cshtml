@@ -1,0 +1,81 @@
+@model GameViewModel
+@{
+    ViewData["Title"] = "SpaceWar Game";
+}
+
+<div class="game-container">
+    <div class="game-header">
+        <div class="score">Score: <span id="currentScore">0</span></div>
+        <div class="high-score">High Score: <span id="highScore">@Model.HighScore</span></div>
+        <div class="health">Health: <span id="health">100</span></div>
+    </div>
+    
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div id="gameOverModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <p>Your Score: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .game-header {
+        display: flex;
+        justify-content: space-between;
+        width: 800px;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+    }
+
+    #gameCanvas {
+        border: 2px solid #333;
+        background-color: #000;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        width: 300px;
+        text-align: center;
+        border-radius: 5px;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 1.1em;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+</style>
+
+@section Scripts {
+    <script src="~/js/game.js"></script>
+}
