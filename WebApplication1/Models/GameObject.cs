@@ -1,22 +1,50 @@
-namespace WebApplication1.Models
+namespace WebApplication1.Models;
+
+public abstract class GameObject
 {
-    // Temel sınıf: GameObject
-    public abstract class GameObject
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Width { get; set; }
+    public float Height { get; set; }
+    public float Speed { get; set; }
+    public bool IsActive { get; set; }
+    public string? SpriteUrl { get; set; }
+    public float MaxHealth { get; protected set; }
+
+    protected GameObject(float x, float y)
     {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        X = x;
+        Y = y;
+        IsActive = true;
+        MaxHealth = 100;
+    }
 
-        public GameObject(int x, int y, int width, int height)
+    public abstract void Update(float deltaTime, Game game);
+
+    public Rectangle GetBounds()
+    {
+        return new Rectangle
         {
-            X = x;
-            Y = y;
-            Width = width;
-            Height = height;
-        }
+            X = X,
+            Y = Y,
+            Width = Width,
+            Height = Height
+        };
+    }
+}
 
-        // Ortak davranışlar
-        public abstract void Move(); // Bu metodu her nesne için özelleştirebilirsiniz
+public class Rectangle
+{
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Width { get; set; }
+    public float Height { get; set; }
+
+    public bool Intersects(Rectangle other)
+    {
+        return !(X + Width < other.X ||
+                other.X + other.Width < X ||
+                Y + Height < other.Y ||
+                other.Y + other.Height < Y);
     }
 }

@@ -5,6 +5,10 @@
       "PackagePath": "staticwebassets/WebApplication1.bundle.scp.css"
     },
     {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/css/game.css",
+      "PackagePath": "staticwebassets/css/game.css"
+    },
+    {
       "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/css/site.css",
       "PackagePath": "staticwebassets/css/site.css"
     },
@@ -13,8 +17,44 @@
       "PackagePath": "staticwebassets/favicon.ico"
     },
     {
-      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/js/site.js",
-      "PackagePath": "staticwebassets/js/site.js"
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/basic-enemy.png",
+      "PackagePath": "staticwebassets/images/basic-enemy.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/boss-enemy.png",
+      "PackagePath": "staticwebassets/images/boss-enemy.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/bullet.png",
+      "PackagePath": "staticwebassets/images/bullet.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/enemy_bullet.jpeg",
+      "PackagePath": "staticwebassets/images/enemy_bullet.jpeg"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/enemy_bullet.png",
+      "PackagePath": "staticwebassets/images/enemy_bullet.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/fast-enemy.png",
+      "PackagePath": "staticwebassets/images/fast-enemy.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/obstacle.png",
+      "PackagePath": "staticwebassets/images/obstacle.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/spaceship.png",
+      "PackagePath": "staticwebassets/images/spaceship.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/images/strong-enemy.png",
+      "PackagePath": "staticwebassets/images/strong-enemy.png"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/js/game.js",
+      "PackagePath": "staticwebassets/js/game.js"
     },
     {
       "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/lib/bootstrap/LICENSE",
@@ -243,6 +283,10 @@
     {
       "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/lib/jquery/dist/jquery.min.map",
       "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
+    },
+    {
+      "Id": "/Users/muhammedaydin/Desktop/c#web/WebApplication1/wwwroot/scores.txt",
+      "PackagePath": "staticwebassets/scores.txt"
     },
     {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WebApplication1.Microsoft.AspNetCore.StaticWebAssets.props",

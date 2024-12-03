@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
@@ -7,125 +7,185 @@ namespace WebApplication1.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private static Spaceship _player;
-        private static List<Enemy> _enemies = new();
-
-        
-        // Static constructor ekleyelim
-        static HomeController()
-        {
-            _player = new Spaceship(100, 10, 5); // Sağlık, hasar, hız
-            SpawnEnemies(); // Düşmanları oluştur
-
-        }
-        private static void SpawnEnemies()
-        {
-            _enemies.Add(new BasicEnemy()); 
-            _enemies.Add(new BossEnemy());
-            _enemies.Add(new FastEnemy()); 
-            _enemies.Add(new StrongEnemy()); 
-        }
+        private static Game _game = new();
+        private static float _deltaTime = 1f / 60f; // 60 FPS
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            
-            // Eğer _player null ise yeniden oluştur
-            if (_player == null)
-            {
-                _player = new Spaceship(100, 10, 5);
-            }
         }
 
-        // Ana oyun ekranını render et
         public IActionResult Index()
         {
-            try 
-            {
-                if (_player == null)
-                {
-                    _player = new Spaceship(100, 10, 5);
-                }
-                return View(_player);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Index hatası: {ex.Message}");
-                return RedirectToAction("Error", new { message = "Oyun başlatılırken bir hata oluştu!" });
-            }
-            
-            
-            
+            return View(_game);
         }
 
-        // Uzay aracını hareket ettirme
-        public IActionResult MovePlayer(string direction)
+        public IActionResult Game()
         {
-            try
+            var gameViewModel = new GameViewModel
             {
-                if (_player == null)
-                {
-                    _player = new Spaceship(100, 10, 5);
-                }
-
-                _logger.LogInformation($"Moving {direction}");
-                _player.Move(direction);
-                _logger.LogInformation($"Moved {direction}");
-
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Hareket hatası: {ex.Message}");
-                return RedirectToAction("Error", new { message = "Hareket sırasında bir hata oluştu!" });
-            }
+                HighScore = _game.GetHighScore() // Assuming GetHighScore() method exists
+            };
+            return View(gameViewModel);
         }
-        
 
-        // Mermi atma işlemi
+        [HttpPost]
+        public IActionResult MoveLeft()
+        {
+            _game.Player.MoveLeft(_deltaTime);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public IActionResult MoveRight()
+        {
+            _game.Player.MoveRight(_deltaTime);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public IActionResult MoveUp()
+        {
+            _game.Player.MoveUp(_deltaTime);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public IActionResult MoveDown()
+        {
+            _game.Player.MoveDown(_deltaTime);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
         public IActionResult Shoot()
         {
-            try
-            {
-                if (_player == null)
-                    return RedirectToAction("Error", new { message = "Oyuncu bulunamadı!" });
-
-                _player.Shoot();
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Ateş etme hatası: {ex.Message}");
-                return RedirectToAction("Error", new { message = "Ateş etme sırasında bir hata oluştu!" });
-            }
+            _game.Player.Shoot();
+            return Json(new { success = true });
         }
 
-        // Hasar alma işlemi
-        public IActionResult TakeDamage(int amount)
+        [HttpPost]
+        public IActionResult Update()
         {
-            try
+            _game.Update(_deltaTime);
+            return Json(new
             {
-                if (_player == null)
-                    return RedirectToAction("Error", new { message = "Oyuncu bulunamadı!" });
-
-                if (amount < 0)
-                    return RedirectToAction("Error", new { message = "Geçersiz hasar miktarı!" });
-
-                _player.TakeDamage(amount);
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Hasar alma hatası: {ex.Message}");
-                return RedirectToAction("Error", new { message = "Hasar alma sırasında bir hata oluştu!" });
-            }
+                success = true,
+                gameState = new
+                {
+                    playerX = _game.Player.X,
+                    playerY = _game.Player.Y,
+                    playerHealth = _game.Player.Health,
+                    enemies = _game.Enemies.Select(e => new
+                    {
+                        x = e.X,
+                        y = e.Y,
+                        type = e.GetType().Name
+                    }),
+                    score = _game.Score,
+                    isGameOver = _game.IsGameOver,
+                    isPaused = _game.IsPaused
+                }
+            });
         }
 
-        // Hata sayfası
+        [HttpPost]
+        public IActionResult TogglePause()
+        {
+            _game.TogglePause();
+            return Json(new { success = true, isPaused = _game.IsPaused });
+        }
+
+        [HttpPost]
+        public IActionResult NewGame()
+        {
+            _game = new Game();
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public IActionResult GetGameState()
+        {
+            var enemies = _game.Enemies.Where(e => e.IsActive).Select(e => new
+            {
+                x = e.X,
+                y = e.Y,
+                bullets = e.Bullets.Where(b => b.IsActive).Select(b => new
+                {
+                    x = b.X,
+                    y = b.Y
+                })
+            });
+
+
+            return Json(new
+            {
+                score = _game.Score,
+                isGameOver = _game.IsGameOver,
+                isPaused = _game.IsPaused,
+                playerHealth = _game.Player?.Health ?? 0,
+                enemies = enemies,
+            });
+        }
+
+        [HttpPost]
+        public IActionResult SaveScore(int score)
+        {
+            // TODO: Implement score saving logic
+            return Json(new { success = true });
+        }
+
+        [HttpGet]
+        public IActionResult GetHighScores()
+        {
+            string path = "highscores.txt";
+            List<HighScore> highScores = new();
+
+            if (System.IO.File.Exists(path))
+            {
+                var lines = System.IO.File.ReadAllLines(path);
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(',');
+                    if (parts.Length == 2 && int.TryParse(parts[1], out int score))
+                    {
+                        highScores.Add(new HighScore
+                        {
+                            PlayerName = parts[0],
+                            Score = score
+                        });
+                    }
+                }
+            }
+
+            return Json(highScores.OrderByDescending(s => s.Score).Take(10));
+        }
+
+        [HttpPost]
+        public IActionResult SaveHighScore([FromBody] HighScore score)
+        {
+            if (score == null || string.IsNullOrWhiteSpace(score.PlayerName))
+            {
+                return BadRequest();
+            }
+
+            string path = "highscores.txt";
+            string line = $"{score.PlayerName},{score.Score}";
+            System.IO.File.AppendAllLines(path, new[] { line });
+
+            return Ok();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+    }
+
+    public class HighScore
+    {
+        public string PlayerName { get; set; }
+        public int Score { get; set; }
     }
 }

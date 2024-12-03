@@ -1,200 +1,221 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
-namespace WebApplication1.Models
+namespace WebApplication1.Models;
+
+public class Game
 {
-    public class Game
+    public Spaceship Player { get; private set; }
+    public List<Enemy> Enemies { get; private set; }
+    public List<PowerUp> PowerUps { get; private set; }
+    public List<Obstacle> Obstacles { get; private set; }
+    public bool IsGameOver { get; private set; }
+    public int Score { get; private set; }
+    public bool IsPaused { get; private set; }
+    public int Level { get; private set; }
+    public int HighScore { get; private set; }
+    private int _highScore = 0;
+
+    private float _enemySpawnTimer;
+    private float _powerUpSpawnTimer;
+    private float _obstacleSpawnTimer;
+    private const float ENEMY_SPAWN_INTERVAL = 2f;
+    private const float POWERUP_SPAWN_INTERVAL = 10f;
+    private const float OBSTACLE_SPAWN_INTERVAL = 5f;
+    private static readonly Random _random = new();
+
+    public Game()
     {
-        public Spaceship? Player { get; private set; }
-        public List<Enemy> Enemies { get; private set; }
-        public bool IsGameOver { get; private set; }
-        public int Score { get; private set; }
+        LoadHighScore();
+        StartGame();
+    }
 
-        private Random random;
-
-        public Game()
+    private void LoadHighScore()
+    {
+        string path = "highscore.txt";
+        if (File.Exists(path))
         {
-            Enemies = new List<Enemy>();
-            Player = new Spaceship(health: 100, damage: 10, speed: 5);
-            Score = 0;
-            IsGameOver = false;
-            random = new Random();
-        }
-
-        public void StartGame()
-        {
-            // Düşmanları oluştur
-            GenerateEnemies();
-        }
-
-        private void GenerateEnemies()
-        {
-            for (int i = 0; i < 5; i++)
+            string scoreStr = File.ReadAllText(path);
+            if (int.TryParse(scoreStr, out int score))
             {
-                Enemies.Add(EnemyFactory.CreateRandomEnemy(random));
+                HighScore = score;
+                _highScore = score;
             }
-        }
-
-        public void UpdateGame()
-        {
-            if (IsGameOver) return;
-
-            UpdatePlayerMovements();
-            UpdateEnemyMovements();
-            CheckCollisions();
-            CheckGameOver();
-        }
-
-        private void UpdatePlayerMovements()
-        {
-            if (Player == null) return;
-            
-            foreach (var bullet in Player.Bullets.ToList())
-            {
-                bullet.Move();
-            }
-        }
-
-        private void UpdateEnemyMovements()
-        {
-            foreach (var enemy in Enemies.ToList())
-            {
-                enemy.Move();
-
-                // Düşmanın ateş etme olasılığı
-                if (random.Next(100) < 10)
-                {
-                    enemy.Attack();
-                }
-            }
-        }
-
-        public void CheckCollisions()
-        {
-            CheckBulletCollisions();
-            CheckSpaceshipCollisions();
-        }
-
-        private void CheckBulletCollisions()
-        {
-            if (Player == null) return;
-
-            foreach (var bullet in Player.Bullets.ToList())
-            {
-                var hitEnemies = Enemies.Where(e => IsColliding(bullet, e)).ToList();
-                foreach (var enemy in hitEnemies)
-                {
-                    enemy.TakeDamage(bullet.Damage);
-                    Player.Bullets.Remove(bullet);
-
-                    if (enemy.Health <= 0)
-                    {
-                        Score += enemy.ScoreValue;
-                        Enemies.Remove(enemy);
-                    }
-                }
-            }
-
-            foreach (var enemy in Enemies)
-            {
-                foreach (var bullet in enemy.Bullets.ToList())
-                {
-                    if (IsColliding(bullet, Player))
-                    {
-                        Player.TakeDamage(bullet.Damage);
-                        enemy.Bullets.Remove(bullet);
-                    }
-                }
-            }
-        }
-
-        private bool IsColliding(Bullet bullet, Enemy enemy)
-        {
-            return bullet.X < enemy.SpawnX + enemy.Width &&
-                   bullet.X + bullet.Width > enemy.SpawnX &&
-                   bullet.Y < enemy.SpawnY + enemy.Height &&
-                   bullet.Y + bullet.Height > enemy.SpawnY;
-        }
-
-        private bool IsColliding(Spaceship player, Enemy enemy)
-        {
-            return player.X < enemy.SpawnX + enemy.Width &&
-                   player.X + player.Width > enemy.SpawnX &&
-                   player.Y < enemy.SpawnY+ enemy.Height &&
-                   player.Y + player.Height > enemy.SpawnY;
-        }
-
-        private void CheckSpaceshipCollisions()
-        {
-            if (Player == null) return;
-
-            foreach (var enemy in Enemies.ToList())
-            {
-                if (IsColliding(Player, enemy))
-                {
-                    Player.TakeDamage(enemy.Damage);
-                    enemy.TakeDamage(Player.Damage);
-
-                    if (enemy.Health <= 0)
-                    {
-                        Score += enemy.ScoreValue;
-                        Enemies.Remove(enemy);
-                    }
-                }
-            }
-        }
-
-        public void EndGame()
-        {
-            IsGameOver = true;
-            SaveScore();
-        }
-
-        private void SaveScore()
-        {
-            string scoreFilePath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "SpacewarScores.txt"
-            );
-
-            using (StreamWriter writer = File.AppendText(scoreFilePath))
-            {
-                writer.WriteLine($"{DateTime.Now}: {Score}");
-            }
-        }
-
-        private void CheckGameOver()
-        {
-            if (Player == null || Player.Health <= 0 || !Enemies.Any())
-            {
-                EndGame();
-            }
-        }
-
-        private bool IsColliding(Bullet bullet, Spaceship player)
-        {
-            return bullet.X < player.X + player.Width &&
-                   bullet.X + bullet.Width > player.X &&
-                   bullet.Y < player.Y + player.Height &&
-                   bullet.Y + bullet.Height > player.Y;
         }
     }
 
-    // Düşman türlerini oluşturmak için fabrika
-    public static class EnemyFactory
+    private void SaveHighScore()
     {
-        public static Enemy CreateRandomEnemy(Random random)
+        if (Score > HighScore)
         {
-            switch (random.Next(4))
+            HighScore = Score;
+            _highScore = Score;
+            File.WriteAllText("highscore.txt", Score.ToString());
+        }
+    }
+
+    public void StartGame()
+    {
+        Player = new Spaceship(400, 500);
+        Enemies = new List<Enemy>();
+        PowerUps = new List<PowerUp>();
+        Obstacles = new List<Obstacle>();
+        IsGameOver = false;
+        IsPaused = false;
+        Score = 0;
+        Level = 1;
+        _enemySpawnTimer = 0;
+        _powerUpSpawnTimer = 0;
+        _obstacleSpawnTimer = 0;
+    }
+
+    public void Update(float deltaTime)
+    {
+        if (IsGameOver || IsPaused) return;
+
+        UpdateTimers(deltaTime);
+        UpdateEntities(deltaTime);
+        int scoreToAdd = CheckCollisions();
+        Score += scoreToAdd;
+        UpdateLevel();
+
+        if (!Player.IsActive)
+        {
+            EndGame();
+        }
+    }
+
+    private void UpdateTimers(float deltaTime)
+    {
+        _enemySpawnTimer += deltaTime;
+        _powerUpSpawnTimer += deltaTime;
+        _obstacleSpawnTimer += deltaTime;
+
+        if (_enemySpawnTimer >= GetEnemySpawnInterval())
+        {
+            SpawnEnemy();
+            _enemySpawnTimer = 0;
+        }
+
+        if (_powerUpSpawnTimer >= POWERUP_SPAWN_INTERVAL)
+        {
+            SpawnPowerUp();
+            _powerUpSpawnTimer = 0;
+        }
+
+        if (_obstacleSpawnTimer >= OBSTACLE_SPAWN_INTERVAL)
+        {
+            SpawnObstacle();
+            _obstacleSpawnTimer = 0;
+        }
+    }
+
+    private float GetEnemySpawnInterval()
+    {
+        return Math.Max(0.5f, ENEMY_SPAWN_INTERVAL - (Level * 0.1f));
+    }
+
+    private void UpdateEntities(float deltaTime)
+    {
+        Player.Update(deltaTime, this);
+
+        for (int i = Enemies.Count - 1; i >= 0; i--)
+        {
+            Enemies[i].Update(deltaTime, this);
+            if (!Enemies[i].IsActive)
             {
-                case 0: return new BasicEnemy();
-                case 1: return new FastEnemy();
-                case 2: return new StrongEnemy();
-                case 3: return new BossEnemy();
-                default: throw new ArgumentOutOfRangeException();
+                Score += Enemies[i].ScoreValue;
+                Enemies.RemoveAt(i);
             }
         }
+
+        for (int i = PowerUps.Count - 1; i >= 0; i--)
+        {
+            PowerUps[i].Update(deltaTime, this);
+            if (!PowerUps[i].IsActive)
+            {
+                PowerUps.RemoveAt(i);
+            }
+        }
+
+        for (int i = Obstacles.Count - 1; i >= 0; i--)
+        {
+            Obstacles[i].Update(deltaTime, this);
+            if (!Obstacles[i].IsActive)
+            {
+                Obstacles.RemoveAt(i);
+            }
+        }
+    }
+
+    private int CheckCollisions()
+    {
+        return CollisionDetector.CheckCollisions(this);
+    }
+
+    private void UpdateLevel()
+    {
+        int newLevel = 1 + (Score / 1000);
+        if (newLevel > Level)
+        {
+            Level = newLevel;
+            Player.Health = Math.Min(Player.Health + 20, Player.MaxHealth);
+        }
+    }
+
+    private void SpawnEnemy()
+    {
+        float x = _random.Next(0, 800 - 30);
+        float y = -30;
+
+        Enemy enemy;
+        int type = _random.Next(0, 100);
+
+        enemy = type switch
+        {
+            < 50 => new BasicEnemy(x, y),
+            < 75 => new FastEnemy(x, y),
+            < 90 => new StrongEnemy(x, y),
+            _ => new BossEnemy(x, y)
+        };
+
+        enemy.SetDifficultyMultiplier(1 + (Level * 0.1f));
+        Enemies.Add(enemy);
+    }
+
+    private void SpawnPowerUp()
+    {
+        float x = _random.Next(0, 800 - 20);
+        float y = -20;
+
+        PowerUp powerUp = new PowerUp(x, y, (PowerUpType)_random.Next(0, 4));
+        PowerUps.Add(powerUp);
+    }
+
+    private void SpawnObstacle()
+    {
+        float x = _random.Next(0, 800 - 40);
+        float y = -40;
+        int size = _random.Next(20, 41);
+
+        Obstacle obstacle = new Obstacle(x, y, size, size);
+        Obstacles.Add(obstacle);
+    }
+
+    public void EndGame()
+    {
+        IsGameOver = true;
+        SaveHighScore();
+    }
+
+    public void TogglePause()
+    {
+        IsPaused = !IsPaused;
+    }
+
+    public int GetHighScore()
+    {
+        return _highScore;
     }
 }

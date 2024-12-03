@@ -1,53 +1,54 @@
-namespace WebApplication1.Models;
+using System;
 
-public class Bullet:Game
+namespace WebApplication1.Models
 {
-    public int Speed { get; private set; } // Merminin hızı
-    public int Damage { get; private set; } // Merminin verdiği hasar
-    public int Direction { get; private set; } // Hareket yönü (1: yukarı, -1: aşağı)
-    public int X { get; private set; } // Merminin yatay eksendeki konumu
-    public int Y { get; private set; } // Merminin dikey eksendeki konumu
-    public int Width { get; private set; } = 10; // Merminin genişliği
-    public int Height { get; private set; } = 20; // Merminin yüksekliği
-
-    public Bullet(int x, int y, int damage, int speed, int direction)
+    public class Bullet
     {
-        X = x;
-        Y = y;
-        Damage = damage;
-        Speed = speed;
-        Direction = direction; // 1: Yukarı (oyuncu), -1: Aşağı (düşman)
-    }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Speed { get; private set; }
+        public float Damage { get; private set; }
+        public bool IsActive { get; set; }
+        public float DirectionX { get; private set; }
+        public float DirectionY { get; private set; }
 
+        public Bullet(float startX, float startY, float directionX, float directionY, float speed, float damage)
+        {
+            X = startX;
+            Y = startY;
+            DirectionX = directionX;
+            DirectionY = directionY;
+            Speed = speed;
+            Damage = damage;
+            IsActive = true;
+        }
 
+        public void Update(float deltaTime, Game game)
+        {
+            X += DirectionX * Speed * deltaTime;
+            Y += DirectionY * Speed * deltaTime;
 
+            // Ekran dışına çıktıysa mermiyi yok et
+            if (X < 0 || X > 800 || Y < 0 || Y > 600)
+            {
+                IsActive = false;
+            }
+        }
 
-    /// <summary>
-    /// Merminin ekranda ilerlemesini sağlar.
-    /// </summary>
-    public void Move()
-    {
-        Y += Speed * Direction;
-    }
- 
+        public void Destroy()
+        {
+            IsActive = false;
+        }
 
-
-    /// <summary>
-    /// Mermi bir hedefe çarptığında hasarı uygular ve yok edilir.
-    /// </summary>
-    /// <param name="target">Hedef (oyuncu veya düşman)</param>
-    public void OnHit(Enemy target)
-    {
-        target.TakeDamage(Damage); // Hedefe hasar uygula
-        Destroy(); // Mermiyi yok et
-    }
-
-    /// <summary>
-    /// Mermi yok edildiğinde yapılacak işlemler.
-    /// </summary>
-    public void Destroy()
-    {
-        Console.WriteLine("Bullet destroyed!");
-        // Yok edilme işlemleri (örn. görsel efektler)
+        public Rectangle GetBounds()
+        {
+            return new Rectangle
+            {
+                X = X,
+                Y = Y,
+                Width = 5,
+                Height = 5
+            };
+        }
     }
 }
