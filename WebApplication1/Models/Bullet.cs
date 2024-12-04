@@ -2,31 +2,32 @@ using System;
 
 namespace WebApplication1.Models
 {
-    public class Bullet
+    public class Bullet : GameObject
     {
         public float X { get; set; }
         public float Y { get; set; }
-        public float Speed { get; private set; }
-        public float Damage { get; private set; }
+        public float Speed { get; set; }
+        public float Damage { get; set; }
         public bool IsActive { get; set; }
-        public float DirectionX { get; private set; }
-        public float DirectionY { get; private set; }
+        public float VelocityX { get; set; }
+        public float VelocityY { get; set; }
+        public bool IsEnemyBullet { get; set; }
+        public float Width { get; set; } = 5;
+        public float Height { get; set; } = 5;
 
-        public Bullet(float startX, float startY, float directionX, float directionY, float speed, float damage)
+        public Bullet(float startX, float startY) : base(startX, startY)
         {
             X = startX;
             Y = startY;
-            DirectionX = directionX;
-            DirectionY = directionY;
-            Speed = speed;
-            Damage = damage;
             IsActive = true;
+            Speed = 300;
+            Damage = 10;
         }
 
-        public void Update(float deltaTime, Game game)
+        public override void Update(float deltaTime, Game game)
         {
-            X += DirectionX * Speed * deltaTime;
-            Y += DirectionY * Speed * deltaTime;
+            X += VelocityX * Speed * deltaTime;
+            Y += VelocityY * Speed * deltaTime;
 
             // Ekran dışına çıktıysa mermiyi yok et
             if (X < 0 || X > 800 || Y < 0 || Y > 600)
@@ -46,8 +47,8 @@ namespace WebApplication1.Models
             {
                 X = X,
                 Y = Y,
-                Width = 5,
-                Height = 5
+                Width = Width,
+                Height = Height
             };
         }
     }

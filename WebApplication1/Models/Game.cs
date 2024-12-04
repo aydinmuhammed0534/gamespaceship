@@ -151,7 +151,54 @@ public class Game
 
     private int CheckCollisions()
     {
-        return CollisionDetector.CheckCollisions(this);
+        // Oyuncu mermilerinin düşmanlara çarpması
+        foreach (var enemy in Enemies.ToList())
+        {
+            foreach (var bullet in Player.Bullets.ToList())
+            {
+                if (CollisionDetector.CheckCollision(bullet, enemy))
+                {
+                    enemy.TakeDamage(bullet.Damage);
+                    bullet.IsActive = false;
+                    if (!enemy.IsActive)
+                    {
+                        Score += enemy.ScoreValue;
+                    }
+                }
+            }
+        }
+
+        // Düşman mermilerinin oyuncuya çarpması
+        foreach (var enemy in Enemies)
+        {
+            foreach (var bullet in enemy.Bullets.ToList())
+            {
+                if (CollisionDetector.CheckCollision(bullet, Player))
+                {
+                    Player.TakeDamage(bullet.Damage);
+                    bullet.IsActive = false;
+                    if (!Player.IsActive)
+                    {
+                        EndGame();
+                    }
+                }
+            }
+        }
+
+        // Düşmanların oyuncuya çarpması
+        foreach (var enemy in Enemies)
+        {
+            if (CollisionDetector.CheckCollision(Player, enemy))
+            {
+                Player.TakeDamage(enemy.Damage * 0.5f);
+                enemy.TakeDamage(Player.Damage * 0.5f);
+                if (!Player.IsActive)
+                {
+                    EndGame();
+                }
+            }
+        }
+        return 0;
     }
 
     private void UpdateLevel()
@@ -174,9 +221,9 @@ public class Game
 
         enemy = type switch
         {
-            < 50 => new BasicEnemy(x, y),
-            < 75 => new FastEnemy(x, y),
-            < 90 => new StrongEnemy(x, y),
+            < 40 => new BasicEnemy(x, y),
+            < 65 => new FastEnemy(x, y),
+            < 85 => new StrongEnemy(x, y),
             _ => new BossEnemy(x, y)
         };
 

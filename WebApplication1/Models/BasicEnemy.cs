@@ -6,6 +6,8 @@ namespace WebApplication1.Models
     {
         private float _attackTimer = 0;
         private float _attackInterval = 2.0f;
+        private float _shootTimer = 0;
+        private const float SHOOT_INTERVAL = 2.0f; // Her 2 saniyede bir ateş eder
 
         public BasicEnemy(float spawnX, float spawnY) 
             : base(spawnX, spawnY, health: 50, speed: 100, damage: 10)
@@ -14,6 +16,13 @@ namespace WebApplication1.Models
 
         public override void Move(float playerX, float playerY, float deltaTime)
         {
+            _shootTimer += deltaTime;
+            if (_shootTimer >= SHOOT_INTERVAL)
+            {
+                Shoot(playerX, playerY);
+                _shootTimer = 0;
+            }
+
             // Basit düşman direk oyuncuya doğru hareket eder
             float dx = playerX - X;
             float dy = playerY - Y;
@@ -39,6 +48,24 @@ namespace WebApplication1.Models
                 // Burada mermi oluşturma işlemi Game sınıfında yapılacak
                 _attackTimer = 0;
             }
+        }
+
+        protected override void Shoot(float playerX, float playerY)
+        {
+            float directionX = playerX - X;
+            float directionY = playerY - Y;
+            float length = (float)Math.Sqrt(directionX * directionX + directionY * directionY);
+            directionX /= length;
+            directionY /= length;
+
+            var bullet = new Bullet(X, Y)
+            {
+                VelocityX = directionX * 5f,
+                VelocityY = directionY * 5f,
+                Damage = this.Damage * 0.5f,
+                IsEnemyBullet = true
+            };
+            Bullets.Add(bullet);
         }
     }
 }

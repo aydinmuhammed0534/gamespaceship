@@ -29,12 +29,26 @@ namespace WebApplication1.Models
         public abstract void Move(float playerX, float playerY, float deltaTime);
         public abstract void Attack(float playerX, float playerY);
 
-        public override void Update(float deltaTime, Game game)
+        protected virtual void Shoot(float playerX, float playerY)
         {
-            Move(game.Player.X, game.Player.Y, deltaTime);
-            Attack(game.Player.X, game.Player.Y);
+            float directionX = playerX - X;
+            float directionY = playerY - Y;
+            float length = (float)Math.Sqrt(directionX * directionX + directionY * directionY);
+            directionX /= length;
+            directionY /= length;
 
-            // Update bullets
+            var bullet = new Bullet(X, Y)
+            {
+                VelocityX = directionX * 5f,
+                VelocityY = directionY * 5f,
+                Damage = this.Damage * 0.5f,
+                IsEnemyBullet = true
+            };
+            Bullets.Add(bullet);
+        }
+
+        public void UpdateBullets(float deltaTime, Game game)
+        {
             for (int i = Bullets.Count - 1; i >= 0; i--)
             {
                 Bullets[i].Update(deltaTime, game);
@@ -42,6 +56,21 @@ namespace WebApplication1.Models
                 {
                     Bullets.RemoveAt(i);
                 }
+            }
+        }
+
+        public override void Update(float deltaTime, Game game)
+        {
+            if (!IsActive) return;
+
+            Move(game.Player.X, game.Player.Y, deltaTime);
+            Attack(game.Player.X, game.Player.Y);
+            UpdateBullets(deltaTime, game);
+
+            // Ekran dışına çıkan düşmanları kaldır
+            if (Y > 600 + Height)
+            {
+                IsActive = false;
             }
         }
 

@@ -13,6 +13,7 @@ namespace WebApplication1.Models
         private float _shootCooldown = 0.2f;
         private float _lastShootTime = 0f;
         private float BulletSpeed = 10f;
+        public float Damage { get; set; } = 10f;
 
         public Spaceship(float x, float y) : base(x, y)
         {
@@ -69,8 +70,14 @@ namespace WebApplication1.Models
         {
             if (_lastShootTime >= _shootCooldown)
             {
-                var bullet = new Bullet(X + Width / 2, Y, 0, -1, BulletSpeed, 15f);
+                var bullet = new Bullet(X + Width / 2, Y)
+                {
+                    VelocityX = 0,
+                    VelocityY = -BulletSpeed,
+                    Damage = this.Damage
+                };
                 Bullets.Add(bullet);
+
                 _lastShootTime = 0;
             }
         }

@@ -23,7 +23,7 @@ namespace WebApplication1.Models
                         {
                             if (enemy != null && enemy.IsActive)
                             {
-                                if (bullet.GetBounds().Intersects(enemy.GetBounds()))
+                                if (CheckCollision(bullet, enemy))
                                 {
                                     enemy.TakeDamage(bullet.Damage);
                                     bullet.IsActive = false;
@@ -51,7 +51,7 @@ namespace WebApplication1.Models
                         {
                             if (bullet.IsActive)
                             {
-                                if (bullet.GetBounds().Intersects(game.Player.GetBounds()))
+                                if (CheckCollision(bullet, game.Player))
                                 {
                                     game.Player.TakeDamage(bullet.Damage);
                                     bullet.IsActive = false;
@@ -69,7 +69,7 @@ namespace WebApplication1.Models
                 {
                     if (powerUp.IsActive)
                     {
-                        if (game.Player.GetBounds().Intersects(powerUp.GetBounds()))
+                        if (CheckCollision(game.Player, powerUp))
                         {
                             game.Player.ApplyPowerUp(powerUp.Type, powerUp.Value, powerUp.Duration);
                             powerUp.IsActive = false;
@@ -85,7 +85,7 @@ namespace WebApplication1.Models
                 {
                     if (obstacle.IsActive)
                     {
-                        if (game.Player.GetBounds().Intersects(obstacle.GetBounds()))
+                        if (CheckCollision(game.Player, obstacle))
                         {
                             game.Player.TakeDamage(obstacle.Damage);
                         }
@@ -106,7 +106,7 @@ namespace WebApplication1.Models
                             {
                                 if (obstacle.IsActive)
                                 {
-                                    if (enemy.GetBounds().Intersects(obstacle.GetBounds()))
+                                    if (CheckCollision(enemy, obstacle))
                                     {
                                         enemy.TakeDamage(obstacle.Damage);
                                     }
@@ -118,6 +118,11 @@ namespace WebApplication1.Models
             }
 
             return scoreToAdd;
+        }
+
+        public static bool CheckCollision(GameObject obj1, GameObject obj2)
+        {
+            return obj1.GetBounds().Intersects(obj2.GetBounds());
         }
     }
 }

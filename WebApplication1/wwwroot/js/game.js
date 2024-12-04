@@ -7,6 +7,7 @@ let deltaTime = 0;
 // Game objects
 let spaceship;
 let bullets = [];
+let enemyBullets = []; // Düşman mermileri için yeni array
 let enemies = [];
 let score = 0;
 let gameOver = false;
@@ -116,10 +117,24 @@ function shoot() {
 }
 
 function updateBullets() {
+    // Oyuncu mermilerini güncelle
     for (let i = bullets.length - 1; i >= 0; i--) {
         bullets[i].y -= bullets[i].speed * deltaTime;
         if (bullets[i].y < 0) {
             bullets.splice(i, 1);
+        }
+    }
+    
+    // Düşman mermilerini güncelle
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = enemyBullets[i];
+        bullet.x += bullet.velocityX * deltaTime;
+        bullet.y += bullet.velocityY * deltaTime;
+        
+        // Ekran dışına çıkan mermileri kaldır
+        if (bullet.y > canvas.height || bullet.y < 0 || 
+            bullet.x > canvas.width || bullet.x < 0) {
+            enemyBullets.splice(i, 1);
         }
     }
 }
@@ -127,18 +142,21 @@ function updateBullets() {
 function spawnEnemies() {
     const currentTime = Date.now();
     if (currentTime - lastEnemySpawn >= ENEMY_SPAWN_INTERVAL) {
-        const enemyTypes = ['basic', 'fast'];
+        const enemyTypes = ['basic', 'fast', 'strong', 'boss'];
         const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
         
         const enemy = {
             x: Math.random() * (canvas.width - 40),
             y: -40,
-            width: 40,
-            height: 40,
+            width: type === 'boss' ? 80 : 40,
+            height: type === 'boss' ? 80 : 40,
             type: type,
-            health: type === 'basic' ? 50 : 30,
-            speed: type === 'basic' ? 100 : 200,
-            damage: type === 'basic' ? 10 : 5
+            health: type === 'boss' ? 500 : (type === 'strong' ? 100 : (type === 'basic' ? 50 : 30)),
+            speed: type === 'fast' ? 200 : (type === 'boss' ? 80 : 100),
+            damage: type === 'boss' ? 30 : (type === 'strong' ? 20 : (type === 'basic' ? 10 : 5)),
+            lastShot: 0,
+            fireRate: type === 'boss' ? 1000 : (type === 'fast' ? 1500 : 2000), // Mermi atış hızı
+            isEnraged: false // Boss için öfke durumu
         };
         
         enemies.push(enemy);
@@ -149,19 +167,82 @@ function spawnEnemies() {
 function updateEnemies() {
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
+        const currentTime = Date.now();
         
+        // Hareket mantığı
         if (enemy.type === 'basic') {
             enemy.y += enemy.speed * deltaTime;
         } else if (enemy.type === 'fast') {
-            // Fast enemy moves towards player
+            // Hızlı düşman oyuncuya doğru hareket eder
             const dx = spaceship.x - enemy.x;
             const dy = spaceship.y - enemy.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             enemy.x += (dx / distance) * enemy.speed * deltaTime;
             enemy.y += (dy / distance) * enemy.speed * deltaTime;
+        } else if (enemy.type === 'strong') {
+            // Güçlü düşman yavaş ama kararlı hareket eder
+            const dx = spaceship.x - enemy.x;
+            const dy = spaceship.y - enemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            enemy.x += (dx / distance) * enemy.speed * 0.7 * deltaTime;
+            enemy.y += (dy / distance) * enemy.speed * 0.7 * deltaTime;
+        } else if (enemy.type === 'boss') {
+            // Boss yatay hareket eder
+            enemy.x += Math.sin(currentTime / 1000) * enemy.speed * deltaTime;
+            enemy.y = Math.min(enemy.y + enemy.speed * 0.2 * deltaTime, canvas.height * 0.2);
+            
+            // Boss'un sağlığı %30'un altına düştüğünde öfkelenir
+            if (!enemy.isEnraged && enemy.health <= 150) {
+                enemy.isEnraged = true;
+                enemy.fireRate *= 0.7; // Daha hızlı ateş eder
+                enemy.speed *= 1.2; // Daha hızlı hareket eder
+            }
         }
         
+        // Mermi atma mantığı
+        if (currentTime - enemy.lastShot >= enemy.fireRate) {
+            const dx = spaceship.x - enemy.x;
+            const dy = spaceship.y - enemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            let bulletSpeed = enemy.type === 'fast' ? 400 : (enemy.type === 'boss' ? 350 : 300);
+            let bulletDamage = enemy.damage * 0.5;
+            
+            if (enemy.type === 'boss' && enemy.isEnraged) {
+                // Boss öfkeliyken 3 mermi atar
+                for (let angle = -0.2; angle <= 0.2; angle += 0.2) {
+                    const dirX = (dx / distance) * Math.cos(angle) - (dy / distance) * Math.sin(angle);
+                    const dirY = (dx / distance) * Math.sin(angle) + (dy / distance) * Math.cos(angle);
+                    
+                    enemyBullets.push({
+                        x: enemy.x + enemy.width / 2,
+                        y: enemy.y + enemy.height / 2,
+                        width: 5,
+                        height: 10,
+                        velocityX: dirX * bulletSpeed,
+                        velocityY: dirY * bulletSpeed,
+                        damage: bulletDamage
+                    });
+                }
+            } else {
+                // Diğer düşmanlar tek mermi atar
+                enemyBullets.push({
+                    x: enemy.x + enemy.width / 2,
+                    y: enemy.y + enemy.height / 2,
+                    width: 5,
+                    height: 10,
+                    velocityX: (dx / distance) * bulletSpeed,
+                    velocityY: (dy / distance) * bulletSpeed,
+                    damage: bulletDamage
+                });
+            }
+            
+            enemy.lastShot = currentTime;
+        }
+        
+        // Ekran dışına çıkan düşmanları kaldır
         if (enemy.y > canvas.height) {
             enemies.splice(i, 1);
         }
@@ -169,7 +250,7 @@ function updateEnemies() {
 }
 
 function checkCollisions() {
-    // Bullet-Enemy collisions
+    // Oyuncu mermileri - Düşman çarpışmaları
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = enemies.length - 1; j >= 0; j--) {
@@ -180,15 +261,31 @@ function checkCollisions() {
                 
                 if (enemy.health <= 0) {
                     enemies.splice(j, 1);
-                    score += enemy.type === 'basic' ? 100 : 200;
+                    score += enemy.type === 'boss' ? 1000 : 
+                            (enemy.type === 'strong' ? 300 : 
+                            (enemy.type === 'basic' ? 100 : 200));
                     updateScore();
                 }
                 break;
             }
         }
     }
+    
+    // Düşman mermileri - Oyuncu çarpışmaları
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = enemyBullets[i];
+        if (detectCollision(bullet, spaceship)) {
+            spaceship.health -= bullet.damage;
+            enemyBullets.splice(i, 1);
+            updateHealth();
+            
+            if (spaceship.health <= 0) {
+                endGame();
+            }
+        }
+    }
 
-    // Enemy-Spaceship collisions
+    // Düşman - Oyuncu çarpışmaları
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
         if (detectCollision(enemy, spaceship)) {
@@ -220,15 +317,31 @@ function render() {
     ctx.fillStyle = '#0F0';
     ctx.fillRect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
 
-    // Draw bullets
+    // Draw player bullets
     ctx.fillStyle = '#FFF';
     bullets.forEach(bullet => {
         ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
     });
 
+    // Draw enemy bullets
+    ctx.fillStyle = '#F00';
+    enemyBullets.forEach(bullet => {
+        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    });
+
     // Draw enemies
     enemies.forEach(enemy => {
-        ctx.fillStyle = enemy.type === 'basic' ? '#F00' : '#FF0';
+        // Her düşman türü için farklı renk
+        ctx.fillStyle = enemy.type === 'basic' ? '#F00' : 
+                       enemy.type === 'fast' ? '#FF0' :
+                       enemy.type === 'strong' ? '#F80' :
+                       '#F0F'; // Boss mor renkte
+        
+        // Boss öfkeliyken yanıp sönme efekti
+        if (enemy.type === 'boss' && enemy.isEnraged) {
+            ctx.fillStyle = Date.now() % 200 < 100 ? '#F0F' : '#FF0';
+        }
+        
         ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
     });
 }
@@ -254,6 +367,7 @@ function restartGame() {
     spaceship.x = canvas.width / 2 - 25;
     spaceship.y = canvas.height - 100;
     bullets = [];
+    enemyBullets = [];
     enemies = [];
     score = 0;
     gameOver = false;
